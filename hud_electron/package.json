@@ -1,0 +1,25 @@
+{
+  "name": "syrix-hud",
+  "version": "3.0.0",
+  "description": "SYRIX desktop interface — Electron shell and React renderer.",
+  "author": "Kabirr Kohli",
+  "license": "UNLICENSED",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "build": "node build.js",
+    "check": "node _check_jsx.js && node _check_preview_security.js && node _check_chat_request_ids.js && node _check_hud_ws_auth.js && node _check_safe_proxy.js && node _check_sc_browser.js && node _check_sc_workspace.js && node _check_shutdown.js",
+    "watch": "node build.js --watch",
+    "start": "node build.js && electron ."
+  },
+  "devDependencies": {
+    "@babel/standalone": "^8.0.3",
+    "electron": "^31.0.0",
+    "esbuild": "^0.28.1",
+    "leaflet": "^1.9.4",
+    "maplibre-gl": "^4.7.1"
+  },
+  "dependencies": {
+    "@playwright/mcp": "0.0.78"
+  }
+}

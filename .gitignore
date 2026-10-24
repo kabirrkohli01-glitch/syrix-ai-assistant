@@ -1,0 +1,23 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+/config.json
+/client_secrets.json
+/knowledge/
+
+# Runtime state
+data/
+logs/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv*/
+venv/
+
+# Interface build output and dependencies
+hud_electron/node_modules/
+hud_electron/dist/

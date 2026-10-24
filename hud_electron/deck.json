@@ -1,0 +1,41 @@
+{
+  "_about": "The Deck: apps of the SYRIX ecosystem that the HUD can launch. Read by syrix-deck.js in the main process; the renderer only ever sends an id from this list. ${NAME} expands to an environment variable, or to SYRIX_ELECTRON (the Electron runtime the HUD itself runs on). 'run' starts a program detached; 'url' opens an https address in the default browser; 'reuse' opens an address instead of launching when that address already answers; 'probe' only drives the running indicator.",
+  "apps": [
+    {
+      "id": "vantage",
+      "name": "VANTAGE",
+      "tagline": "Trading terminal",
+      "icon": "assets/deck/vantage.png",
+      "aura": "#d6a94b",
+      "launch": {
+        "run": "${SYRIX_ELECTRON}",
+        "args": [
+          "${USERPROFILE}\\Terminal"
+        ],
+        "cwd": "${USERPROFILE}\\Terminal"
+      }
+    },
+    {
+      "id": "syrix-cam",
+      "name": "SYRIX Cam",
+      "tagline": "Camera studio and health",
+      "icon": "assets/deck/syrix-cam.png",
+      "aura": "#f29a2e",
+      "launch": {
+        "run": "${LOCALAPPDATA}\\Programs\\SYRIX Cam\\SyrixCam.exe",
+        "cwd": "${LOCALAPPDATA}\\Programs\\SYRIX Cam"
+      }
+    },
+    {
+      "id": "portfolio",
+      "name": "Kabirr Kohli",
+      "short": "Kabirr Kohli",
+      "tagline": "Profile website",
+      "icon": "assets/deck/portfolio.png",
+      "aura": "#d4a849",
+      "launch": {
+        "url": "https://kabirr-kohli.pages.dev"
+      }
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#03050b" />
+<title>SYRIX · Neural OS</title>
+<!--
+  CSP — 'unsafe-eval' removed: JSX is now pre-compiled by esbuild at build time,
+  so Babel's runtime eval is no longer needed. style-src keeps 'unsafe-inline' for
+  component-scoped <style> blocks.
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; worker-src blob: 'self'; img-src 'self' file: data: blob: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com https://i.scdn.co https://mosaic.scdn.co https://image-cdn-ak.spotifycdn.com https://*.wikimedia.org https://*.wikipedia.org https://*.wikidata.org https://icons.duckduckgo.com https://*.espncdn.com; connect-src 'self' ws://127.0.0.1:5111 ws://localhost:5111 https://1.1.1.1 https://fonts.googleapis.com https://fonts.gstatic.com https://api.spotify.com https://accounts.spotify.com https://nominatim.openstreetmap.org https://api.rss2json.com https://feeds.bbci.co.uk https://api.open-meteo.com https://geocoding-api.open-meteo.com https://*.basemaps.cartocdn.com https://fonts.openmaptiles.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self' https://unpkg.com; frame-src 'self' https://www.google.com https://maps.google.com https://www.openstreetmap.org https://www.ventusky.com;" />
+<link rel="icon" type="image/png" href="../assets/icons/syrix_app_logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="syrix-primary-styles.css" />
+<!-- Aurora Glass (aurora-glass.css) — the only active theme. Loads AFTER
+     primary-styles so body.theme-aurora-glass rules win the cascade. -->
+<link rel="stylesheet" href="aurora-glass.css" />
+<link rel="stylesheet" href="syrix-settings.css" />
+<link rel="stylesheet" href="node_modules/leaflet/dist/leaflet.css" />
+<style>
+  /* Legacy mount surface */
+  #syrix-legacy-mount { position: absolute; left: -99999px; top: -99999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .p-conn-online     .p-conn-dot { background: #16d37a; box-shadow: 0 0 8px #16d37a; }
+  .p-conn-offline    .p-conn-dot { background: #ff4f6e; box-shadow: 0 0 8px #ff4f6e; }
+  .p-conn-connecting .p-conn-dot { background: #f5c243; box-shadow: 0 0 8px #f5c243; }
+
+  /* SYRIX answer-renderer accent — one knob the active theme can override so
+     tables, code badges, step rails, callouts and text selection all re-tint
+     together. Amber is the Aurora Glass accent; a future theme sets this once. */
+  :root { --sxr-accent-rgb: 255,183,43; }
+  /* Amber "liquid glass" text selection, app-wide (replaces default browser blue). */
+  ::selection { background: rgba(var(--sxr-accent-rgb, 255,183,43), 0.28); color: #fff; }
+
+  /* Pre-React placeholder — the same ground the start-up animation paints,
+     so nothing changes colour between the first frame and the animation.
+     It was a navy (#05070f), and the stylesheet default --bg is navy too
+     until the theme class lands, which read as a blue flash on every start. */
+  html, body { margin: 0; padding: 0; height: 100%; background: #080604; overflow: hidden; }
+  html.pal-dark, html.pal-dark body { background: #000000; }
+  #syrix-pre-boot {
+    position: fixed; inset: 0; z-index: 100000;
+    background: inherit;
+  }
+</style>
+</head>
+<body>
+<script src="syrix-preboot.js"></script>
+<!-- Pre-React placeholder — replaced on React mount -->
+<div id="root">
+  <div id="syrix-pre-boot" aria-hidden="true"></div>
+</div>
+<!-- Legacy HUD has been preserved at index_legacy_v4.html. The connection
+     badge in the redesigned HUD has a "LEGACY" button that opens it. -->
+<div id="syrix-legacy-mount" aria-hidden="true"></div>
+
+<!-- React 18 production builds — smaller and faster than dev. -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+<!-- @babel/standalone removed: JSX pre-compiled by esbuild (node build.js) -->
+
+<!-- Bridge — wires React UI to existing WS + state JSON contracts. Loads
+     before three.js / leaflet so it can start polling the WebSocket and
+     hud_state.json in parallel with the heavier visual deps downloading. -->
+<script src="syrix-stage.js"></script>
+<script src="syrix-bridge.js"></script>
+<script src="syrix-audio.js"></script>
+
+<!-- Markdown rendering for chat answers. Vendored
+     LOCALLY (no CDN) so answers render even with no internet. DOMPurify
+     sanitises the HTML before it ever touches the DOM. -->
+<script src="vendor/marked.min.js"></script>
+<script src="vendor/purify.min.js"></script>
+
+<!-- Three.js for the 3D orb + boot cinematic; Leaflet only used by the Map widget. -->
+<!-- Suppress Three.js r150+ deprecation warnings for the UMD build — migrating to ES modules is out of scope. -->
+<script src="syrix-three-warning-guard.js"></script>
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js" integrity="sha384-qOkzR5Ke/XkQxuGVJ9hpFEpDlcoLtWwVYhnJf06cLIZa2vaIptSqaubivErzmD5O" crossorigin="anonymous"></script>
+<script src="syrix-three-warning-restore.js"></script>
+<!-- GSAP — drives the boot cinematic timeline -->
+<script src="https://unpkg.com/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
+<script src="syrix-primary-ball.js"></script>
+<!-- Voice Mode 2D living presence (2026-07-17) — replaces the orb inside the
+     Voice overlay; Canvas 2D, amplitude-reactive, reduced-motion aware. -->
+<script src="syrix-voice-presence.js"></script>
+<!-- Pass-3 (2026-05-16): generic 3D model registry. Any 3D object/widget
+     can register itself and become a gesture/voice target. Loads BEFORE the
+     sandbox + arc reactor so they can register on mount. -->
+<script src="syrix-3d-control.js"></script>
+<!-- Phase-4 (2026-05-17): extended 3D model library — Earth, planets,
+     atoms, molecules, organs, animals, vehicles, neural networks. Loaded
+     before the sandbox so it can build the geometry on demand. -->
+<script src="syrix-3d-models.js"></script>
+<!-- Leaflet — local copy so it's always ready when the MapWidget mounts. -->
+<script src="node_modules/leaflet/dist/leaflet.js"></script>
+<!-- JSX pre-compiled by esbuild — run `node build.js` to rebuild after edits -->
+<!-- Presentation Engine V2 — shared smart answer renderer
+     (window.SyrixAnswerRenderer). Must load BEFORE the chat panel and both
+     shells so finished answers render as premium UI blocks, never raw markdown. -->
+<script src="dist/syrix-answer-renderer.js"></script>
+<!-- Adaptive response components (2026-07-11) — inline data cards
+     (window.SyrixAdaptiveCard) the backend attaches only when the user's
+     intent earns one. Must load BEFORE the shells that render chat lines. -->
+<script src="dist/syrix-adaptive-cards.js"></script>
+<script src="dist/syrix-primary-chat.js"></script>
+<script src="dist/syrix-primary-widgets.js"></script>
+<!-- Pass-2 frontend libs (UMD via unpkg, CSP-allowed). All are loaded
+     defer-style; the Pass-2 widget components null-check their globals so
+     a slow unpkg load just renders a clean placeholder. -->
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js" integrity="sha384-OK7vELvjHdhUFi31JYioPIcRHTROLdcDa6ZsNWgvgLaKj+9JqhU0Ad8g4wz3CXjA" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js" integrity="sha384-/AfDwVDXNopzPvhxMPQ11y1OCpR6mVkWx47qzSwIiquvxkcMkZddEzDNtIOtfCpk" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/recharts@2.13.0/umd/Recharts.js" integrity="sha384-2T89lk+kUCXwsFuKjQtCfz8F407H8BWKqp6kY/Ke1PMZz1DfL3597E6zWJbXGfMZ" crossorigin="anonymous"></script>
+<!-- zustand + reactflow UMD removed 2026-06-17: nothing references window.zustand
+     or window.ReactFlow (MemoryGraph was rebuilt without ReactFlow). zustand's UMD
+     reads a missing global (useSyncExternalStoreShimWithSelector) and threw the
+     "Cannot read properties of undefined (reading 'useSyncExternalStoreWithSelector')"
+     renderer crash + a text/plain script refusal. Re-add ONLY alongside the
+     use-sync-external-store shim if React Flow is ever reintroduced. -->
+<script src="https://unpkg.com/globe.gl@2.32.0/dist/globe.gl.min.js" integrity="sha384-Plx/0mhoQXLzFNQEcp4kULf6wOFgVaNISmr+3cNLjGb4U8Nq7d7/96ydYtbT0Wb6" crossorigin="anonymous"></script>
+<script src="dist/syrix-pass2-widgets.js"></script>
+<script src="dist/syrix-hud-app-dock.js"></script>
+<!-- Phase-2D: SYRIX 3D Sandbox. -->
+<script src="dist/syrix-3d-sandbox.js"></script>
+<!-- Universal Research Activity Feed + Brain Status pill — theme-agnostic.
+     Must load BEFORE shells so window.SyrixActivityFeedHook / Panel /
+     BrainStatusPill are available when shells mount. -->
+<script src="dist/syrix-activity-feed.js"></script>
+<!-- ZENITH sub-agent deployment panel — must load AFTER the activity feed
+     (uses SyrixActivityFeedHook) and BEFORE both shells (they mount
+     window.SyrixZenithPanel on ZENITH turns only). -->
+<script src="dist/syrix-zenith-panel.js"></script>
+<!-- Connectors page (2026-07-12) — full-window Connectors view opened from
+     the nav rail. Exposes window.SyrixConnectorsPanel; renders from the
+     syrix_connectors bridge snapshot key. Must load BEFORE the aurora shell. -->
+<script src="dist/syrix-connectors-panel.js"></script>
+<!-- Supercomputer workspace — full-window agentic environment (chat + embedded
+     browser), opened from the mode switcher. Exposes
+     window.SyrixSupercomputerWorkspace; renders from the syrix_supercomputer
+     bridge snapshot key. Must load BEFORE the aurora shell. -->
+<script src="dist/syrix-supercomputer-workspace.js"></script>
+<!-- Dynamic Island hub — global media session + stopwatch store + rich card
+     renderers. Must load BEFORE primary-app (island consumers) and BEFORE
+     widgets would need the stopwatch store at interaction time. -->
+<script src="dist/syrix-island-hub.js"></script>
+<!-- Aurora Glass shell — the only active theme shell. Must precede
+     primary-app so window.SyrixAuroraShell is available on mount. -->
+<script src="dist/syrix-aurora-shell.js"></script>
+<!-- Settings page; also applies the HUD preferences at load. -->
+<script src="dist/syrix-settings.js"></script>
+<script src="dist/syrix-boot-cinematic.js"></script>
+<script src="dist/syrix-primary-app.js"></script>
+</body>
+</html>

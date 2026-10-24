@@ -1,0 +1,15 @@
+{
+  "browser": {
+    "launchOptions": {
+      "args": [
+        "--disable-quic",
+        "--dns-prefetch-disable",
+        "--force-webrtc-ip-handling-policy=disable_non_proxied_udp"
+      ]
+    },
+    "contextOptions": {
+      "acceptDownloads": false,
+      "serviceWorkers": "block"
+    }
+  }
+}

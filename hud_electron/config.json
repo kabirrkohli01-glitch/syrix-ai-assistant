@@ -1,0 +1,7 @@
+{
+  "GROQ_MODEL": "llama-3.3-70b-specdec",
+  "HUD_APP_PERSISTENT_SESSION": "1",
+  "HUD_BROWSER_PARTITION_ID": "syrix-hud-browser",
+  "HUD_BROWSER_CLEAR_DATA_ON_STARTUP": "0",
+  "HUD_BROWSER_ALLOW_EXTERNAL_POPOUT": "0"
+}
