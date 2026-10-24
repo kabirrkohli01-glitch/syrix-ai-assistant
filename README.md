@@ -62,6 +62,10 @@ pytest tests
 
 This repository contains the assistant core, its security layers and the desktop interface. The host process that starts the runtime on Windows and owns the microphone and window lifecycle is not included, so the desktop app does not start from this repository alone. Configuration (`config.json`, `.env`) and personal data are kept out of version control; `.env.example` lists the keys the code reads.
 
+## Development history
+
+Developed in a private repository — 484 commits, May to October 2026 — and published here as a curated snapshot. The working history stays private because it contains local configuration from development.
+
 ---
 
 © 2026 Kabirr Kohli. All rights reserved. Published for viewing; no licence is granted to copy, modify or redistribute.
